@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	lambda.Start(handlers.NewSearcher())
+	lambda.Start(handlers.NewSearcher("/tmp/pricebook.db"))
 }

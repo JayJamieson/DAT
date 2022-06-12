@@ -20,7 +20,7 @@ func TestSearcher(t *testing.T) {
 
 	ctx = lambdacontext.NewContext(ctx, &lambdacontext.LambdaContext{
 		AwsRequestID:       "495b12a8-xmpl-4eca-8168-160484189f99",
-		InvokedFunctionArn: "arn:aws:lambda:us-east-2:123456789012:function:pb-ingestor",
+		InvokedFunctionArn: "arn:aws:lambda:ap-southeast-2:123456789012:function:pb-ingestor",
 	})
 
 	var event events.APIGatewayProxyRequest
@@ -29,7 +29,7 @@ func TestSearcher(t *testing.T) {
 		"q": "conduit",
 	}
 
-	handler := handlers.NewSearcher()
+	handler := handlers.NewSearcher("/tmp/pb.db")
 
 	response, _ := handler(ctx, event)
 	fmt.Println(response.Body)
