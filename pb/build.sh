@@ -9,5 +9,3 @@ docker run -it -v $(pwd):/project aws go build -o ./bin/main ./cmd/searcher/main
 rm function.zip
 
 zip -j function.zip ./bin/main
-
- aws lambda update-function-code --function-name pb-query --zip-file fileb://function.zip

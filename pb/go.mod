@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.16.5
 	github.com/aws/aws-sdk-go-v2/config v1.15.10
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.26.11
+	github.com/matryer/is v1.4.0
 	github.com/mattn/go-sqlite3 v1.14.13
 )
 

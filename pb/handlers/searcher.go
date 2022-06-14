@@ -5,21 +5,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	_ "github.com/mattn/go-sqlite3"
-)
-
-var (
-	priceBookBucketName = "price-books"
-	dbPath              = "/tmp/pricebook.db"
 )
 
 type SearchResult struct {
@@ -37,32 +28,45 @@ type SearchResult struct {
 type SearchResults []SearchResult
 
 func init() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	if os.Getenv("PB_ENV") == "production" {
+		log.SetFlags(log.LstdFlags | log.Lshortfile)
+	}
 }
 
-func NewSearcher(connectionString string) func(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+type Downloader interface {
+	Download(key string, ctx context.Context) error
+}
+
+type NoOpDownloader struct {
+}
+
+func (noop *NoOpDownloader) Download(key string, ctx context.Context) error {
+	return nil
+}
+
+func NewSearcher(connectionString string, downloader Downloader) func(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	return func(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 		fmt.Printf("Processing request data for request %s.\n", request.RequestContext.RequestID)
 
-		err := downloadPriceBook("pb.db", ctx)
+		err := downloader.Download("pb.db", ctx)
 
 		if err != nil {
 			log.Fatal(err)
 			return events.APIGatewayProxyResponse{Body: err.Error(), StatusCode: 500}, nil
 		}
 
-		entries, err := os.ReadDir("/tmp")
+		// entries, err := os.ReadDir("/tmp")
 
-		if err != nil {
-			log.Fatalf("error reading directory %v", err)
-			return events.APIGatewayProxyResponse{Body: err.Error(), StatusCode: 500}, nil
-		}
-		log.Println(len(entries))
+		// if err != nil {
+		// 	log.Fatalf("error reading directory %v", err)
+		// 	return events.APIGatewayProxyResponse{Body: err.Error(), StatusCode: 500}, nil
+		// }
+		// log.Println(len(entries))
 
-		for _, item := range entries {
-			info, _ := item.Info()
-			log.Printf("%v, %v, %v", item.Name(), info.Mode(), info.Size())
-		}
+		// for _, item := range entries {
+		// 	info, _ := item.Info()
+		// 	log.Printf("%v, %v, %v", item.Name(), info.Mode(), info.Size())
+		// }
 
 		db, err := sql.Open("sqlite3", connectionString)
 
@@ -149,43 +153,6 @@ func NewSearcher(connectionString string) func(ctx context.Context, request even
 
 		return events.APIGatewayProxyResponse{Body: string(body), StatusCode: 200}, nil
 	}
-}
-
-func downloadPriceBook(path string, ctx context.Context) error {
-	cfg, err := config.LoadDefaultConfig(ctx)
-
-	if err != nil {
-		log.Fatalf("failed to load SDK configuration, %v", err)
-	}
-
-	client := s3.NewFromConfig(cfg)
-
-	getObjectInput := &s3.GetObjectInput{
-		Bucket: aws.String(priceBookBucketName),
-		Key:    aws.String(path),
-	}
-
-	object, err := client.GetObject(ctx, getObjectInput)
-
-	if err != nil {
-		log.Fatalf("failed to download pricebook db, %v", err)
-		return err
-	}
-
-	data, err := ioutil.ReadAll(object.Body)
-	if err != nil {
-		log.Fatalf("failed to download s3 body, %v", err)
-		return err
-	}
-
-	err = ioutil.WriteFile(dbPath, data, 0666)
-
-	if err != nil {
-		log.Fatalf("failed to download/write pricebook db, %v", err)
-		return err
-	}
-
-	return nil
 }
 
 func getResultLimit(queryStringParameters map[string]string) (int, error) {
