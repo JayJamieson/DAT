@@ -189,10 +189,12 @@ func (n *Node) monitorChanges(ctx context.Context) error {
 }
 
 func main() {
-	port := flag.String("port", "", "")
+	port := flag.String("port", "9000", "")
+	consulHost := flag.String("consul", "http://localhost:8500", "")
+
 	flag.Parse()
 
-	leaser := NewLeaser("http://localhost:8500", *port)
+	leaser := NewLeaser(*consulHost, *port)
 	err := leaser.Open()
 
 	if err != nil {

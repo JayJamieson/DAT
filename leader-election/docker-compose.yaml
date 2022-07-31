@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  consul:
+    hostname: consul
+    image: consul:latest
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    networks:
+      - consul
+    command: "agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0"
+  node1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: "./node -port 9001 -consul http://consul:8500"
+    networks:
+      - consul
+    depends_on:
+      - consul
+  node2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: "./node -port 9002 -consul http://consul:8500"
+    networks:
+      - consul
+    depends_on:
+      - consul
+  node3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: "./node -port 9003 -consul http://consul:8500"
+    networks:
+      - consul
+    depends_on:
+      - consul
+networks:
+  consul:
+
+
