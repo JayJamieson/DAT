@@ -4,7 +4,7 @@
 
 ### On Local machine
 
-- Start consul container using command found at [Run consul container](##Run-consul-container)
+- Start consul container using command found at [Run consul container](#Run-consul-container)
 - `go build -o node .` to build binary
 
 - `./node -port 9000 -consul http://localhost:8500`
