@@ -1,0 +1,19 @@
+{
+    "name": "jay/csv",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Jay\\Csv\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Jay",
+            "email": "38236622+JayJamieson@users.noreply.github.com"
+        }
+    ],
+    "require": {
+        "league/csv": "9.8.0"
+    }
+}
